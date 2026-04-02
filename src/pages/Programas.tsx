@@ -1,7 +1,12 @@
 import React from 'react';
 import NewsSection from '../components/NewsSection';
+import { type NewsItem } from '../data/mockNews';
 
-export default function Programas({ news }) {
+interface ProgramasProps {
+  news: NewsItem[];
+}
+
+export default function Programas({ news }: ProgramasProps) {
   const keywordSearch = (arr, term) => arr.filter(n => n.title.toLowerCase().includes(term.toLowerCase()) || n.link.toLowerCase().includes(term.toLowerCase()));
 
   // Bloques específicos de realitys solicitados

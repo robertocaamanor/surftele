@@ -1,8 +1,27 @@
-import { subMinutes } from 'date-fns';
+export interface NewsItem {
+  id: string;
+  title: string;
+  link: string;
+  source: string;
+  category: string;
+  published_at: string;
+  image_url?: string | null;
+  created_at?: string;
+}
 
-const now = new Date();
+export interface Category {
+  id: string;
+  name: string;
+  color: string;
+}
 
-export const CATEGORIES = [
+export interface SourceInfo {
+  name: string;
+  icon: string;
+  color: string;
+}
+
+export const CATEGORIES: Category[] = [
   { id: 'all', name: 'TODAS', color: 'bg-gray-700' },
   { id: 'tv-chilena', name: 'TV CHILENA', color: 'bg-brand-blue' },
   { id: 'fiebre-de-baile', name: 'FIEBRE DE BAILE', color: 'bg-brand-pink' },
@@ -11,7 +30,7 @@ export const CATEGORIES = [
   { id: 'tendencias', name: 'TENDENCIAS', color: 'bg-brand-orange' },
 ];
 
-export const SOURCES = {
+export const SOURCES: Record<string, SourceInfo> = {
   lacuarta: { name: 'La Cuarta', icon: 'LA CUARTA', color: 'text-red-500' },
   biobio: { name: 'Bío-Bío', icon: 'BÍO-BÍO', color: 'text-blue-500' },
   pagina7: { name: 'Página 7', icon: 'PÁGINA 7', color: 'text-orange-500' },

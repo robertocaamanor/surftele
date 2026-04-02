@@ -2,9 +2,13 @@ import React from 'react';
 import { Volume2, GripVertical, Plus } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CATEGORIES, SOURCES } from '../data/mockNews';
+import { CATEGORIES, SOURCES, type NewsItem } from '../data/mockNews';
 
-const NewsCard = ({ news }) => {
+interface NewsCardProps {
+  news: NewsItem;
+}
+
+const NewsCard = ({ news }: NewsCardProps) => {
   const source = SOURCES[news.source] || { name: news.source, icon: news.source, color: 'text-gray-500' };
   
   return (
@@ -40,7 +44,12 @@ const NewsCard = ({ news }) => {
   );
 };
 
-const Column = ({ category, allNews }) => {
+interface ColumnProps {
+  category: { id: string; name: string; color: string };
+  allNews: NewsItem[];
+}
+
+const Column = ({ category, allNews }: ColumnProps) => {
   const isAll = category.id === 'all';
   const filteredNews = isAll ? allNews : allNews.filter(n => n.category === category.id);
   
@@ -98,7 +107,11 @@ const Column = ({ category, allNews }) => {
   );
 };
 
-export default function Dashboard({ news }) {
+interface DashboardProps {
+  news: NewsItem[];
+}
+
+export default function Dashboard({ news }: DashboardProps) {
   return (
     <main className="flex-1 overflow-x-auto overflow-y-hidden p-4 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-opacity-5">
       <div className="flex h-full gap-4 pb-2 items-stretch" style={{ width: 'max-content' }}>

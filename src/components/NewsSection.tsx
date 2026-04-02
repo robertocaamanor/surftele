@@ -1,9 +1,14 @@
 import React from 'react';
-import { SOURCES } from '../data/mockNews';
+import { SOURCES, type NewsItem } from '../data/mockNews';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-export default function NewsSection({ title, articles = [] }) {
+interface NewsSectionProps {
+  title: string;
+  articles?: NewsItem[];
+}
+
+export default function NewsSection({ title, articles = [] }: NewsSectionProps) {
   if (!articles || articles.length === 0) return null;
 
   const mainArticle = articles[0];

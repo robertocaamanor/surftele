@@ -5,14 +5,14 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Programas from './pages/Programas';
 import Musica from './pages/Musica';
-import { CATEGORIES, SOURCES } from './data/mockNews';
+import { CATEGORIES, SOURCES, type NewsItem } from './data/mockNews';
 
 function App() {
-  const [news, setNews] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [isLive, setIsLive] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [isLive, setIsLive] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const location = useLocation();
 
   const fetchNews = async () => {

@@ -1,7 +1,12 @@
 import React from 'react';
 import NewsSection from '../components/NewsSection';
+import { type NewsItem } from '../data/mockNews';
 
-export default function Musica({ news }) {
+interface MusicaProps {
+  news: NewsItem[];
+}
+
+export default function Musica({ news }: MusicaProps) {
   const keywordSearch = (arr, term) => arr.filter(n => n.title.toLowerCase().includes(term.toLowerCase()));
   
   const musicaNews = news.filter(n => n.category === 'musica');
