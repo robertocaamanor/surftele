@@ -44,12 +44,13 @@ async function categorizarNoticia(titulo: string, descripcion: string) {
   const prompt = `
   Eres un categorizador de noticias chileno para un canal de dashboard de TV.
   Debes clasificar esta noticia en EXACTAMENTE UNA de estas categorías:
-  'tv-chilena', 'fiebre-de-baile', 'musica', 'famosos', 'tendencias'.
+  'tv-chilena', 'tv-argentina', 'fiebre-de-baile', 'musica', 'famosos', 'tendencias'.
   
   Reglas esenciales:
   - Responde ÚNICAMENTE con el ID de la categoría (ej: tv-chilena).
   - No uses comillas, ni símbolos, ni oraciones extra. Solo la palabra o frase separada por guión.
-  - Si una noticia trata sobre un artista pero está relacionada con televisión, prioriza 'tv-chilena'.
+  - Si una noticia trata sobre un artista pero está relacionada con televisión chilena, prioriza 'tv-chilena'.
+  - Si trata sobre televisión o farándula argentina, es 'tv-argentina'.
   - Si trata sobre cantantes, es 'musica'.
   - Si trata de farándula sin programa específico, 'famosos'.
   - Sobre el estelar de baile en Chile, 'fiebre-de-baile'.
@@ -76,7 +77,7 @@ async function categorizarNoticia(titulo: string, descripcion: string) {
     const data = await res.json();
     let categoria = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toLowerCase() || 'tendencias';
     
-    const validCategorias = ['tv-chilena', 'fiebre-de-baile', 'musica', 'famosos', 'tendencias'];
+    const validCategorias = ['tv-chilena', 'tv-argentina', 'fiebre-de-baile', 'musica', 'famosos', 'tendencias'];
     if (!validCategorias.includes(categoria)) categoria = 'tendencias';
     
     return categoria;
@@ -111,6 +112,14 @@ const FEEDS: { url: string; source: string; defaultCategory?: string; translateT
 
   // Artistas Chilenos (categoría fija, ya en español)
   { url: "https://news.google.com/rss/search?q=artistas+chilenos+musica+when:24h+site:soloartistaschilenos.cl&hl=es-419&gl=CL&ceid=CL:es-419", source: "soloartistas", defaultCategory: "musica" },
+
+  // TV Argentina
+  { url: "https://news.google.com/rss/search?q=espectaculos+when:24h+site:lanacion.com.ar&hl=es-419&gl=AR&ceid=AR:es-419", source: "lanacion", defaultCategory: "tv-argentina" },
+  { url: "https://news.google.com/rss/search?q=espectaculos+when:24h+site:clarin.com&hl=es-419&gl=AR&ceid=AR:es-419", source: "clarin", defaultCategory: "tv-argentina" },
+  { url: "https://news.google.com/rss/search?q=when:24h+site:exitoina.perfil.com&hl=es-419&gl=AR&ceid=AR:es-419", source: "exitoina", defaultCategory: "tv-argentina" },
+  { url: "https://news.google.com/rss/search?q=espectaculos+when:24h+site:minutouno.com&hl=es-419&gl=AR&ceid=AR:es-419", source: "minutouno", defaultCategory: "tv-argentina" },
+  { url: "https://news.google.com/rss/search?q=primiciasya+when:24h+site:a24.com&hl=es-419&gl=AR&ceid=AR:es-419", source: "a24", defaultCategory: "tv-argentina" },
+  { url: "https://news.google.com/rss/search?q=espectaculos+when:24h+site:eldestape.com&hl=es-419&gl=AR&ceid=AR:es-419", source: "eldestape", defaultCategory: "tv-argentina" },
 ];
 
 serve(async (req) => {

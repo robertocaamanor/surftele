@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, RefreshCw, Radio, Search, Loader2 } from 'lucide-react';
+// Force Vite HMR reload
 import { supabase } from './lib/supabase';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
@@ -15,8 +16,9 @@ function App() {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const location = useLocation();
 
-  const fetchNews = async () => {
+  const fetchNews = React.useCallback(async () => {
     setIsRefreshing(true);
+    console.log('[Intervalo] Actualizando feed desde Supabase...');
     const limite24Horas = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data, error } = await supabase
       .from('news_feed')
@@ -26,9 +28,9 @@ function App() {
       .limit(50);
     if (!error && data) setNews(data);
     setIsRefreshing(false);
-  };
+  }, []);
   
-  const handleSearch = async (e) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim() || isSearching) return;
     
@@ -79,9 +81,9 @@ function App() {
         setIsLive(status === 'SUBSCRIBED');
       });
 
-    // Re-render cada minuto para actualizar los tiempos relativos
+    // Actualizar el feed desde la base de datos cada minuto
     const timeInterval = setInterval(() => {
-      setNews((current) => [...current]);
+      fetchNews();
     }, 60000);
 
     return () => {

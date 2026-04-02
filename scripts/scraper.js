@@ -18,6 +18,13 @@ const SOURCES = [
   { id: 'mega', name: 'Mega', url: 'https://www.mega.cl/entretenimiento/', category: 'tv-chilena' },
   { id: 'chv', name: 'CHV Noticias', url: 'https://www.chilevision.cl/noticias/show/', category: 'fiebre-de-baile' },
   { id: 'tvn', name: '24 Horas', url: 'https://www.24horas.cl/tendencias/espectaculos', category: 'musica' },
+  // Argentina
+  { id: 'lanacion', name: 'La Nación', url: 'https://www.lanacion.com.ar/espectaculos/', category: 'tv-argentina' },
+  { id: 'clarin', name: 'Clarín', url: 'https://www.clarin.com/espectaculos', category: 'tv-argentina' },
+  { id: 'exitoina', name: 'Exitoina', url: 'https://exitoina.perfil.com/', category: 'tv-argentina' },
+  { id: 'minutouno', name: 'Minuto Uno', url: 'https://www.minutouno.com/contenidos/espectaculos.html', category: 'tv-argentina' },
+  { id: 'a24', name: 'A24 / PrimiciasYa', url: 'https://www.a24.com/primiciasya', category: 'tv-argentina' },
+  { id: 'eldestape', name: 'El Destape', url: 'https://www.eldestape.com/seccion/espectaculos', category: 'tv-argentina' },
 ];
 
 async function scrapeSource(source) {
