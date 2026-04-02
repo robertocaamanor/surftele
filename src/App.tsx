@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, RefreshCw, Radio, Search, Loader2 } from 'lucide-react';
+import { Settings, RefreshCw, Radio, Search } from 'lucide-react';
 // Force Vite HMR reload
 import { supabase } from './lib/supabase';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Programas from './pages/Programas';
 import Musica from './pages/Musica';
+import Busqueda from './pages/Busqueda';
 import { CATEGORIES, SOURCES, type NewsItem } from './data/mockNews';
 
 function App() {
   const [news, setNews] = useState<NewsItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [isSearching, setIsSearching] = useState<boolean>(false);
   const [isLive, setIsLive] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const location = useLocation();
+
+  const isFetchingEdge = React.useRef(false);
 
   const fetchNews = React.useCallback(async () => {
     setIsRefreshing(true);
@@ -29,27 +30,24 @@ function App() {
     if (!error && data) setNews(data);
     setIsRefreshing(false);
   }, []);
-  
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim() || isSearching) return;
-    
-    setIsSearching(true);
-    try {
-      // Invocamos la función con el término a buscar (Supabase se encarga de auth y URL mágicamente)
-      await supabase.functions.invoke('fetch-news', {
-        body: { query: searchQuery }
-      });
-    } catch (err) {
-      console.error("Error ejecutando la búsqueda remota:", err);
-    }
-    setSearchQuery('');
-    setIsSearching(false);
-  };
 
+  const invokeEdgeFunction = React.useCallback(async () => {
+    if (isFetchingEdge.current) return;
+    isFetchingEdge.current = true;
+    console.log('[Auto] Invocando fetch-news para buscar noticias nuevas...');
+    try {
+      await supabase.functions.invoke('fetch-news');
+    } catch (err) {
+      console.error('[Auto] Error invocando fetch-news:', err);
+    } finally {
+      isFetchingEdge.current = false;
+    }
+  }, []);
+  
   // Carga inicial y suscripción a Supabase
   useEffect(() => {
     fetchNews();
+    invokeEdgeFunction();
 
     // Suscribirse a cambios en tiempo real (INSERT, UPDATE, DELETE)
     const channel = supabase
@@ -86,9 +84,13 @@ function App() {
       fetchNews();
     }, 60000);
 
+    // Invocar la Edge Function cada 2 minutos para scrape de noticias nuevas
+    const edgeInterval = setInterval(invokeEdgeFunction, 2 * 60 * 1000);
+
     return () => {
       supabase.removeChannel(channel);
       clearInterval(timeInterval);
+      clearInterval(edgeInterval);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -108,24 +110,10 @@ function App() {
             <Link to="/" className={location.pathname === '/' ? "text-blue-400 font-bold" : "text-gray-400 hover:text-gray-200 transition-colors"}>Portadas</Link>
             <Link to="/programas" className={location.pathname === '/programas' ? "text-blue-400 font-bold" : "text-gray-400 hover:text-gray-200 transition-colors hidden lg:block"}>Programas</Link>
             <Link to="/musica" className={location.pathname === '/musica' ? "text-blue-400 font-bold" : "text-gray-400 hover:text-gray-200 transition-colors hidden lg:block"}>Música</Link>
-            
-            <form onSubmit={handleSearch} className="relative flex items-center ml-2 lg:ml-6 group">
-              <input 
-                type="text" 
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Buscar a la IA..." 
-                className="bg-[#1a1d24] text-[11px] text-gray-200 pl-8 pr-8 py-1.5 rounded-full outline-none border border-gray-700/50 focus:border-brand-blue/50 w-48 transition-all duration-300 focus:w-64 placeholder-gray-500 disabled:opacity-50 shadow-inner"
-                disabled={isSearching}
-              />
-              <Search className={`w-3.5 h-3.5 absolute left-3 transition-colors ${isSearching ? 'text-gray-600' : 'text-gray-400 group-hover:text-brand-blue'}`} />
-              
-              {isSearching && (
-                <div className="absolute right-3">
-                  <Loader2 className="w-3.5 h-3.5 text-brand-blue animate-spin" />
-                </div>
-              )}
-            </form>
+            <Link to="/busqueda" className={`hidden lg:flex items-center gap-1.5 ml-2 px-3 py-1.5 rounded-full border transition-colors text-[11px] font-medium ${ location.pathname === '/busqueda' ? 'border-blue-500/40 bg-blue-500/10 text-blue-400' : 'border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-600'}`}>
+              <Search className="w-3 h-3" />
+              Buscar IA
+            </Link>
           </nav>
         </div>
         
@@ -167,6 +155,7 @@ function App() {
           <Route path="/" element={<Dashboard news={news} />} />
           <Route path="/programas" element={<Programas news={news} />} />
           <Route path="/musica" element={<Musica news={news} />} />
+          <Route path="/busqueda" element={<Busqueda />} />
         </Routes>
 
     </div>

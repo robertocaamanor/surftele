@@ -14,12 +14,9 @@ const NewsCard = ({ news }: NewsCardProps) => {
   return (
     <div className="bg-[#16191f] border border-gray-800 rounded-lg p-3 mb-4 hover:border-gray-600 transition-colors shadow-sm">
       <div className="flex items-center justify-between mb-2 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="text-gray-400">
-            {formatDistanceToNow(parseISO(news.published_at || news.timestamp), { addSuffix: true, locale: es })}
-          </span>
-          <span className={`font-bold ${source.color}`}>{source.icon}</span>
-        </div>
+        <span className="text-gray-400">
+          {formatDistanceToNow(parseISO(news.published_at || news.timestamp), { addSuffix: true, locale: es })}
+        </span>
         <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-800 text-gray-300 tracking-wider uppercase border border-gray-700">
           {news.category.replace('-', ' ')}
         </span>
@@ -29,17 +26,20 @@ const NewsCard = ({ news }: NewsCardProps) => {
         {news.title}
       </a>
       
-      <a href={news.link} target="_blank" rel="noreferrer" className="flex gap-1 mb-3 bg-gray-800/50 p-1.5 rounded text-xs items-center text-blue-400 truncate cursor-pointer hover:bg-gray-800 transition-colors border border-gray-700/50">
-        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-        <span className="truncate">Ver noticia completa</span>
-      </a>
-      
       {news.image_url && (
-        <a href={news.link} target="_blank" rel="noreferrer" className="block rounded-md overflow-hidden h-32 mb-2 relative group cursor-pointer">
+        <a href={news.link} target="_blank" rel="noreferrer" className="block rounded-md overflow-hidden h-32 mb-3 relative group cursor-pointer">
           <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors z-10" />
           <img src={news.image_url} alt={news.title} className="w-full h-full object-cover" />
         </a>
       )}
+
+      <div className="flex items-center justify-between gap-2 mt-1">
+        <span className={`text-[10px] font-bold uppercase tracking-wider ${source.color}`}>{source.icon}</span>
+        <a href={news.link} target="_blank" rel="noreferrer" className="flex gap-1 bg-gray-800/50 px-2 py-1 rounded text-xs items-center text-blue-400 hover:bg-gray-800 transition-colors border border-gray-700/50">
+          <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+          <span>Ver nota</span>
+        </a>
+      </div>
     </div>
   );
 };

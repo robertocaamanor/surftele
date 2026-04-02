@@ -135,12 +135,14 @@ serve(async (req) => {
 
   try {
     let customQuery = null;
+    let previewMode = false;
     if (req.method === 'POST') {
       try {
         const bodyText = await req.text();
         if (bodyText) {
           const body = JSON.parse(bodyText);
           if (body.query) customQuery = body.query;
+          if (body.preview === true) previewMode = true;
         }
       } catch (e) {
         // ignore if not valid JSON
@@ -150,41 +152,49 @@ serve(async (req) => {
     let feedsToProcess: typeof FEEDS = FEEDS;
 
     if (customQuery) {
-       console.log("Búsqueda personalizada detectada:", customQuery);
+       console.log("Búsqueda personalizada detectada:", customQuery, previewMode ? "(preview)" : "");
+       // En búsqueda manual usamos when:30d para cubrir el último mes
        feedsToProcess = [
-         { url: `https://news.google.com/rss/search?q=${encodeURIComponent(customQuery)}+when:24h&hl=es-419&gl=CL&ceid=CL:es-419`, source: "Google News" }
+         { url: `https://news.google.com/rss/search?q=${encodeURIComponent(customQuery)}+when:30d&hl=es-419&gl=CL&ceid=CL:es-419`, source: "Google News" }
        ];
     }
 
     const noticiasProcesadas = [];
     let llamadasGemini = 0;
-    const MAX_LLAMADAS_GEMINI = 8; // ~10 RPM free tier, dejamos margen
+    // En preview aumentamos el límite para devolver más resultados al usuario
+    const MAX_LLAMADAS_GEMINI = previewMode ? 20 : 8;
+    // En preview tomamos más entradas por fuente
+    const ENTRADAS_POR_FUENTE = previewMode ? 10 : 2;
     
     for (const feedConfig of feedsToProcess) {
-      if (llamadasGemini >= MAX_LLAMADAS_GEMINI) break; // Evitar saturar Gemini
+      if (llamadasGemini >= MAX_LLAMADAS_GEMINI) break;
       console.log("Extrayendo de:", feedConfig.url);
-      const feed = await extract(feedConfig.url); // Extractor de XML ligero
+      const feed = await extract(feedConfig.url);
       
       if (!feed || !feed.entries) continue;
       
-      const recentEntries = feed.entries.slice(0, 2); // 2 por fuente para no exceder cuotas
+      const entries = feed.entries.slice(0, ENTRADAS_POR_FUENTE);
       
-      const limite24Horas = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      // En preview no filtramos por fecha (el RSS ya viene filtrado por when:30d)
+      const limiteDate = previewMode
+        ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        : new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-      for (const item of recentEntries) {
-        // Filtrar estricto 24 horas por código también
+      for (const item of entries) {
         const fechaPub = new Date(item.published || Date.now());
-        if (fechaPub < limite24Horas) continue;
+        if (fechaPub < limiteDate) continue;
 
-        // Verificar existencia en base de datos para no duplicar
-        const { data: existente } = await supabase
-          .from('news_feed')
-          .select('id')
-          .eq('link', item.link)
-          .single();
-          
-        if (!existente && llamadasGemini < MAX_LLAMADAS_GEMINI) {
-          // Categorizar: si el feed ya tiene categoría fija, no llamamos a Gemini
+        // En modo preview no verificamos duplicados ni insertamos
+        const yaExiste = previewMode ? false : await (async () => {
+          const { data } = await supabase
+            .from('news_feed')
+            .select('id')
+            .eq('link', item.link)
+            .single();
+          return !!data;
+        })();
+
+        if (!yaExiste && llamadasGemini < MAX_LLAMADAS_GEMINI) {
           let categoria: string;
           if (feedConfig.defaultCategory) {
             categoria = feedConfig.defaultCategory;
@@ -194,10 +204,9 @@ serve(async (req) => {
               item.description || item.title || ""
             );
             llamadasGemini++;
-            await new Promise(r => setTimeout(r, 7000)); // 7s → respeta ~8 RPM
+            await new Promise(r => setTimeout(r, 7000));
           }
 
-          // Traducir título si el feed viene en inglés
           let titulo: string;
           if (feedConfig.translateToSpanish) {
             titulo = await traducirTitulo(item.title || "");
@@ -215,7 +224,10 @@ serve(async (req) => {
             published_at: item.published || new Date().toISOString()
           };
           
-          await supabase.from('news_feed').insert([noticiaData]);
+          // Solo insertar en BD si NO es preview
+          if (!previewMode) {
+            await supabase.from('news_feed').insert([noticiaData]);
+          }
           noticiasProcesadas.push(noticiaData);
         }
       }
